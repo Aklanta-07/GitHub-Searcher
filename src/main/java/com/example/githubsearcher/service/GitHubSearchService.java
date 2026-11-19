@@ -2,6 +2,8 @@ package com.example.githubsearcher.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.example.githubsearcher.client.GitHubApiClient;
@@ -43,11 +45,51 @@ public class GitHubSearchService {
 	            .map(this::mapToEntity)
 	            .toList();
 
-	    gitHubRepository.saveAll(repositories);
+		repositories.forEach(repo ->
+			        gitHubRepository.upsert(
+			                repo.getId(),
+			                repo.getName(),
+			                repo.getDescription(),
+			                repo.getOwnerName(),
+			                repo.getLanguage(),
+			                repo.getStarsCount(),
+			                repo.getForksCount(),
+			                repo.getLastUpdatedAt()
+			        )
+     	);
 
 	    return repositories.stream()
 	            .map(this::mapToResponse)
 	            .toList();
+	}
+	
+	public List<GitHubRepoResponse> getRepositories(
+			String language,
+			Integer minStars,
+			String sort
+			) {
+		
+		String sortField = switch (
+				sort == null || sort.isBlank() ? "stars" : sort.toLowerCase()
+				) {
+				case "stars" -> "starsCount";
+		        case "forks" -> "forksCount";
+		        case "updated" -> "lastUpdatedAt";
+		        default -> throw new IllegalArgumentException(
+		                "Invalid sort value. Allowed values: stars, forks, updated"
+		        );
+		};
+		
+		List<GitHubRepo> repositories = gitHubRepository.findByFilters(
+				language == null || language.isBlank() ? null : language.trim(),
+				minStars,
+				Sort.by(Direction.DESC, sortField)
+				);
+		
+		return repositories.stream()
+				.map(this::mapToResponse)
+				.toList();
+		
 	}
 	
 	private GitHubRepo mapToEntity(GitHubApiRepoResponse apiRepo) {
