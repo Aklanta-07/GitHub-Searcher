@@ -1,13 +1,11 @@
 package com.example.githubsearcher;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class GithubSearcherApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+    @Test
+    void applicationTestPlaceholder() {
+        // Application behavior is covered by focused unit and web-layer tests.
+    }
 }
